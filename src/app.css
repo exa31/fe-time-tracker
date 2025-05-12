@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-primary: #011231; /* Hijau cerah untuk primary (mewakili waktu yang sedang berjalan) */
+    --color-primary-dark: #00091a;
+    --color-primary-light: #334266;
+    --color-secondary: #ebebff
+}
