@@ -22,8 +22,6 @@ const isAuth = computed(() => {
   return cookie?.isKey('token')
 })
 
-console.log(isAuth.value)
-
 </script>
 
 
