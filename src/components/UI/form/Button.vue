@@ -17,7 +17,7 @@ defineEmits(['click'])
 const classes = computed(() => {
   return {
     primary: "bg-primary-light hover:bg-primary-dark dark:bg-white dark:hover:bg-gray-300 text-white dark:text-black hover:cursor-pointer " + props.class,
-    secondary: "bg-gray-500 hover:bg-gray-700 text-white " + props.class,
+    secondary: "bg-gray-500 hover:bg-gray-700 text-white cursor-pointer  " + props.class,
     success: "bg-green-500 hover:bg-green-700 text-white " + props.class,
     danger: "bg-red-500 hover:bg-red-700 text-white " + props.class,
     warning: "bg-yellow-500 hover:bg-yellow-700 text-white " + props.class,

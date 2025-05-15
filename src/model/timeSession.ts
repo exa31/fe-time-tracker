@@ -4,9 +4,11 @@ export type TimeSession = {
     idUser: number;
     idTimeSession: number;
     startTime: EpochTimeStamp;
-    endTime: string | null;
-    description: string | null;
-    duration: string | null;
+    endTime?: number;
+    description?: string;
+    duration?: string;
 }
 
 export type GetActiveTimeSessionResponse = Response<TimeSession | null>
+
+export type GetTimeSessionsResponse = Response<TimeSession[]>

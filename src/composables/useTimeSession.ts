@@ -3,21 +3,23 @@ import type {VueCookies} from "vue-cookies";
 import {AxiosError} from "axios";
 import {useRouter} from "vue-router";
 import {toast} from "vue3-toastify";
-import type {GetActiveTimeSessionResponse, TimeSession} from "../model/timeSession.ts";
+import type {GetActiveTimeSessionResponse, GetTimeSessionsResponse, TimeSession} from "../model/timeSession.ts";
 import {fetchApi} from "../libs";
 
 const useTimeSession = () => {
     const cookie = inject<VueCookies>('$cookies')
     const loading = ref(false)
+    const loadingTimeSession = ref(false)
     const router = useRouter()
+    const data = reactive<TimeSession[]>([])
     const timeSessionActive = reactive<TimeSession>(
         {
             idUser: 0,
             idTimeSession: 0,
-            startTime: "",
-            endTime: null,
-            description: null,
-            duration: null
+            startTime: 0,
+            endTime: undefined,
+            description: undefined,
+            duration: undefined
         }
     )
     const config: {
@@ -33,8 +35,8 @@ const useTimeSession = () => {
     }
 
     const startTimeSession = async () => {
-        if (loading.value) return
-        loading.value = true
+        if (loadingTimeSession.value) return
+        loadingTimeSession.value = true
         try {
             await fetchApi(
                 {
@@ -43,6 +45,7 @@ const useTimeSession = () => {
                     method: 'post'
                 }
             )
+            timeSessionActive.startTime = Date.now()
             toast.success("Time session started successfully")
 
         } catch (error) {
@@ -50,14 +53,19 @@ const useTimeSession = () => {
                 if (error.status === 401) {
                     cookie?.remove("token");
                     window.location.href = "/login"
+                    throw error
                 } else {
                     toast.error(error.response?.data?.message);
                     console.error(error.response?.data?.message);
+                    throw error
                 }
             } else {
                 console.error("An unexpected error occurred:", error);
                 toast.error("An unexpected error occurred");
+                throw error
             }
+        } finally {
+            loadingTimeSession.value = false
         }
     }
 
@@ -95,8 +103,8 @@ const useTimeSession = () => {
     }
 
     const stopTimeSession = async () => {
-        if (loading.value) return
-        loading.value = true
+        if (loadingTimeSession.value) return
+        loadingTimeSession.value = true
         try {
             await fetchApi(
                 {
@@ -111,20 +119,55 @@ const useTimeSession = () => {
                 if (error.status === 401) {
                     cookie?.remove("token");
                     await router.replace('/login')
+                    throw error
                 } else {
                     toast.error(error.response?.data?.message);
                     console.error(error.response?.data?.message);
+                    throw error
                 }
             } else {
                 console.error("An unexpected error occurred:", error);
                 toast.error("An unexpected error occurred");
+                throw error
             }
         } finally {
-            loading.value = false
+            loadingTimeSession.value = false
+        }
+    }
+
+    const getAllTimeSession = async () => {
+        try {
+            const res = await fetchApi<GetTimeSessionsResponse>({
+                url: '/api/1.0/time-sessions',
+                config,
+                method: 'get'
+            })
+            if (res?.data) {
+                Object.assign(data, res.data)
+                return
+            }
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                if (error.status === 401) {
+                    cookie?.remove("token");
+                    await router.replace('/login')
+                    throw error
+                } else {
+                    toast.error(error.response?.data?.message);
+                    console.error(error.response?.data?.message);
+                    throw error
+                }
+            } else {
+                console.error("An unexpected error occurred:", error);
+                toast.error("An unexpected error occurred");
+                throw error
+            }
         }
     }
 
     return {
+        data,
+        getAllTimeSession,
         loading,
         startTimeSession,
         getActiveTimeSession,
