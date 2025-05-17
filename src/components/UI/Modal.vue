@@ -42,14 +42,6 @@ const size = computed(
         </div>
         <slot name="body"></slot>
         <slot name="footer"></slot>
-        <Button
-            theme="secondary"
-            class="px-5 duration-300 py-2 rounded-xl w-full mt-4"
-            type="button"
-            @click="$emit('close')"
-        >
-          Close
-        </Button>
       </div>
     </div>
   </transition>

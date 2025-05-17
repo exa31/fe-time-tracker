@@ -7,6 +7,7 @@ const props = defineProps<{
   label: string;
   placeholder?: string;
   class?: string;
+  placeholderOptions?: string;
   options: Array<{ value: string | number; text: string }>;
   theme: "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "base";
   disabled?: boolean;
@@ -45,7 +46,7 @@ const onChange = (event: Event) => {
 
 <template>
   <div class="flex flex-col">
-    <label :for="id" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ label }}</label>
+    <label :for="id" class="text-base mb-6 font-medium text-gray-700 dark:text-gray-300">{{ label }}</label>
     <select
         :id="id"
         :name="name"
@@ -54,6 +55,7 @@ const onChange = (event: Event) => {
         @change="onChange"
         :placeholder="label"
     >
+      <option disabled value="">{{ placeholderOptions || 'Select an option' }}</option>
       <option v-for="option in options" :key="option.value" :value="option.value">
         {{ option.text }}
       </option>

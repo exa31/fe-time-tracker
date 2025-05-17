@@ -4,6 +4,8 @@ import {onBeforeMount, onMounted, ref} from "vue";
 import Button from "../components/UI/form/Button.vue";
 import Select from "../components/UI/form/Select.vue";
 import Modal from "../components/UI/Modal.vue";
+import {ClipboardList} from "lucide-vue-next";
+import Input from "../components/UI/form/Input.vue";
 
 const {
   timeSessionActive,
@@ -12,7 +14,9 @@ const {
   getActiveTimeSession,
   loading,
   startTimeSession,
-  stopTimeSession
+  stopTimeSession,
+  updateTimeSession,
+  errorMessages
 } = useTimeSession();
 
 onMounted(async () => {
@@ -25,7 +29,14 @@ onMounted(async () => {
 
 const interval = ref<Number | null>(null);
 const formattedTime = ref("00:00:00:00");
-const show = ref(true);
+const show = ref(false);
+const formData = ref<
+    {
+      description: string
+      idTimeSession?: number
+    }>({
+  description: '',
+});
 const selectedViewType = ref<{ value: string, text: string }>({
   value: "full-date",
   text: "Tanggal Lengkap"
@@ -84,6 +95,7 @@ const handleStop = async () => {
       description: undefined,
       duration: undefined
     })
+    getAllTimeSession()
   } catch (error) {
     console.error("Error stopping time session:", error);
   }
@@ -95,6 +107,7 @@ const handleStart = async () => {
     if (interval.value === null) {
       interval.value = setInterval(updateFormattedTime, 1000);
     }
+    getAllTimeSession()
   } catch (error) {
     console.error("Error starting time session:", error);
   }
@@ -166,8 +179,30 @@ function parseISODuration(duration: string): string {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-function handleDetail() {
+function handleDetail(idTimeSession: number) {
   show.value = true
+  const timeSession = data.find((item) => item.idTimeSession === idTimeSession)
+  if (!timeSession) return
+  formData.value = {
+    description: timeSession.description || '',
+    idTimeSession: idTimeSession,
+  }
+}
+
+async function handleUpdate() {
+  try {
+    if (!formData.value?.idTimeSession || !formData.value?.description) return
+    const timeSession = data.find((item) => item.idTimeSession === formData.value?.idTimeSession)
+    if (!timeSession) return
+    const body = {
+      description: formData.value.description,
+    }
+    await updateTimeSession(formData.value.idTimeSession, body)
+    show.value = false
+    getAllTimeSession()
+  } catch (error) {
+    console.error("Error updating time session:", error);
+  }
 }
 
 </script>
@@ -275,7 +310,8 @@ function handleDetail() {
             {{ item.description ? item.description : '-' }}
           </td>
           <td class="text-black dark:text-white px-4 py-2">
-            <Button @click="handleDetail" theme="secondary" class="px-5 duration-300 py-2 rounded-xl" type="button">
+            <Button @click="handleDetail(item.idTimeSession)" theme="secondary"
+                    class="px-5 duration-300 py-2 rounded-xl" type="button">
               Edit
             </Button>
           </td>
@@ -289,11 +325,28 @@ function handleDetail() {
         <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200">Edit Time Session</h2>
       </template>
       <template #body>
-        <p class="text-gray-600 dark:text-gray-400">This is the modal body content.</p>
+        <form @submit.prevent="handleUpdate">
+          <div class="text-start">
+            <Input label="Description" :error="errorMessages.description" v-model="formData.description" theme="base"
+                   class="p-3 mt-5 mb-3 rounded-xl"
+                   id="description"
+                   type="text" placeholder="Description">
+              <template #icon>
+                <ClipboardList class="text-center"/>
+              </template>
+            </Input>
+          </div>
+          <div class="flex justify-end gap-5 ">
+            <Button type="button" theme="secondary" class="px-7 duration-300 transition-all py-2 rounded-xl"
+                    @click="show = false">Close
+            </Button>
+            <Button type="submit" theme="primary" class="px-10 duration-300 transition-all py-2 rounded-xl"
+            >Save
+            </Button>
+          </div>
+        </form>
       </template>
-      <template #footer>
-        <Button type="button" theme="primary" @click="show = false">Close</Button>
-      </template>
+
     </Modal>
   </div>
 </template>

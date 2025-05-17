@@ -3,13 +3,22 @@ import type {VueCookies} from "vue-cookies";
 import {AxiosError} from "axios";
 import {useRouter} from "vue-router";
 import {toast} from "vue3-toastify";
-import type {GetActiveTimeSessionResponse, GetTimeSessionsResponse, TimeSession} from "../model/timeSession.ts";
-import {fetchApi} from "../libs";
+import {
+    type GetActiveTimeSessionResponse,
+    type GetTimeSessionsResponse,
+    type TimeSession,
+    UpdateTimeSession
+} from "../model/timeSession.ts";
+import {fetchApi, validateForm} from "../libs";
+import {ZodError} from "zod";
 
 const useTimeSession = () => {
     const cookie = inject<VueCookies>('$cookies')
     const loading = ref(false)
     const loadingTimeSession = ref(false)
+    const errorMessages = reactive({
+        description: "",
+    })
     const router = useRouter()
     const data = reactive<TimeSession[]>([])
     const timeSessionActive = reactive<TimeSession>(
@@ -143,7 +152,10 @@ const useTimeSession = () => {
                 method: 'get'
             })
             if (res?.data) {
-                Object.assign(data, res.data)
+                const dataSorted = res.data.sort((a, b) => {
+                    return new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+                })
+                Object.assign(data, dataSorted)
                 return
             }
         } catch (error) {
@@ -165,9 +177,69 @@ const useTimeSession = () => {
         }
     }
 
+    const updateTimeSession = async (id: number, body: { description: string }) => {
+        if (loadingTimeSession.value) return
+        loadingTimeSession.value = true
+        Object.assign(errorMessages, {
+            description: "",
+        })
+        try {
+            await validateForm(body, UpdateTimeSession)
+            await fetchApi(
+                {
+                    url: `/api/1.0/time-sessions/${id}/update`,
+                    config,
+                    method: 'put',
+                    body
+                }
+            )
+            toast.success("Time session updated successfully")
+        } catch (error) {
+            if (error instanceof ZodError) {
+                toast.error("Please check your input", {
+                    position: "top-right",
+                    autoClose: 2000,
+                });
+                const errorMap: { [key: string]: string } = {
+                    description: "",
+                }
+                error.errors.forEach((err) => {
+                    const field = err.path[0]
+                    if (field in errorMap) {
+                        errorMap[field] = err.message
+                    }
+                })
+                Object.assign(errorMessages, errorMap) // langsung update reactive object
+                throw error
+            } else if (error instanceof AxiosError) {
+                if (error.status === 401) {
+                    cookie?.remove("token");
+                    toast.error("Session expired, please login again", {
+                        position: "top-right",
+                        autoClose: 2000,
+                    })
+                    await router.replace('/login')
+                    throw error
+                } else {
+                    toast.error(error.response?.data?.message);
+                    console.error(error.response?.data?.message);
+                    throw error
+                }
+            } else {
+                console.error("An unexpected error occurred:", error);
+                toast.error("An unexpected error occurred");
+                throw error
+            }
+        } finally {
+            loadingTimeSession.value = false
+        }
+    }
+
     return {
         data,
         getAllTimeSession,
+        errorMessages,
+        updateTimeSession,
         loading,
         startTimeSession,
         getActiveTimeSession,
