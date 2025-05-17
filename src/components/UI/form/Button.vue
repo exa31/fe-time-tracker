@@ -33,7 +33,7 @@ const classes = computed(() => {
   <div class="">
     <button
         :class="classes"
-        @click="$emit('click')">
+        @click="$emit('click', props)">
       <slot></slot>
     </button>
   </div>

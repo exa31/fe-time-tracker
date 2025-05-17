@@ -2,6 +2,8 @@
 import useTimeSession from "../composables/useTimeSession.ts";
 import {onBeforeMount, onMounted, ref} from "vue";
 import Button from "../components/UI/form/Button.vue";
+import Select from "../components/UI/form/Select.vue";
+import Modal from "../components/UI/Modal.vue";
 
 const {
   timeSessionActive,
@@ -23,6 +25,11 @@ onMounted(async () => {
 
 const interval = ref<Number | null>(null);
 const formattedTime = ref("00:00:00:00");
+const show = ref(true);
+const selectedViewType = ref<{ value: string, text: string }>({
+  value: "full-date",
+  text: "Tanggal Lengkap"
+});
 const hour = ref("00");
 const minute = ref("00");
 const second = ref("00");
@@ -50,6 +57,12 @@ const updateFormattedTime = () => {
     formattedTime.value = `${String(totalDays).padStart(2, "0")}:${String(remainingHours).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
   }
 };
+
+const optionsView: { text: string, value: string }[] = [
+  {text: "Tanggal Lengkap", value: "full-date"},       // 11 Mei 2025, 16:32
+  {text: "Tanggal Singkat", value: "short-date"},       // 11/05/2025, 16:32
+  {text: "Hari Singkat + Tanggal", value: "short-day"}  // Sel, 11/05/2025, 16:32
+];
 
 const handleStop = async () => {
   try {
@@ -95,9 +108,48 @@ onBeforeMount(() => {
 })
 
 
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp)
-  return date.toLocaleString()
+function formatDate(timestamp: number, viewType: { value: string, text: string }): string | null {
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) {
+    return null; // Invalid date
+  }
+
+  const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const shortDays = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  const months = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+
+  const dayNum = date.getDate();
+  const monthNum = date.getMonth() + 1;
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear();
+
+  const dayName = days[date.getDay()];
+  const shortDayName = shortDays[date.getDay()];
+
+  const hour = date.getHours().toString().padStart(2, "0");
+  const minute = date.getMinutes().toString().padStart(2, "0");
+  const second = date.getSeconds().toString().padStart(2, "0");
+
+  let datePart = "";
+
+  switch (viewType.value) {
+    case "full-date":
+      datePart = `${dayName}, ${dayNum} ${monthName} ${year}`;
+      break;
+    case "short-date":
+      datePart = `${dayNum.toString().padStart(2, '0')}/${monthNum.toString().padStart(2, '0')}/${year}`;
+      break;
+    case "short-day":
+      datePart = `${shortDayName}, ${dayNum.toString().padStart(2, '0')}/${monthNum.toString().padStart(2, '0')}/${year}`;
+      break;
+    default:
+      datePart = date.toLocaleDateString();
+  }
+
+  return `${datePart}, ${hour}:${minute}:${second}`;
 }
 
 function parseISODuration(duration: string): string {
@@ -112,6 +164,10 @@ function parseISODuration(duration: string): string {
   const seconds = matches[3] ? parseInt(matches[3]) : 0
 
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
+function handleDetail() {
+  show.value = true
 }
 
 </script>
@@ -184,7 +240,13 @@ function parseISODuration(duration: string): string {
     <div class="my-20">
       <h3 class="text-2xl text-black dark:text-white font-bold">History</h3>
       <p class="text-gray-500 dark:text-gray-400">History of your time session</p>
-      <table class="min-w-full table-auto border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
+      <div class="text-start my-5">
+        <Select theme="base" class="px-5  py-3 rounded-2xl" id="selectView" v-model="selectedViewType"
+                label="Select view"
+                :options="optionsView"
+                placeholder="Select View History"></Select>
+      </div>
+      <table class="min-w-full mt-10 table-auto border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
         <thead class="bg-gray-100 text-center  dark:bg-gray-800 text-gray-700 dark:text-gray-200">
         <tr>
           <th class="px-4 py-2 text-black dark:text-white ">Start Time</th>
@@ -201,10 +263,10 @@ function parseISODuration(duration: string): string {
             class="even:bg-gray-50 dark:even:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
           <td class="text-black dark:text-white px-4 py-2">
-            {{ formatDate(item.startTime) }}
+            {{ formatDate(item.startTime, selectedViewType) }}
           </td>
           <td class="text-black dark:text-white px-4 py-2">
-            {{ item.endTime ? formatDate(item.endTime) : '-' }}
+            {{ item.endTime ? formatDate(item.endTime, selectedViewType) : '-' }}
           </td>
           <td class="text-black dark:text-white px-4 py-2">
             {{ item.duration ? parseISODuration(item.duration) : '-' }}
@@ -213,7 +275,7 @@ function parseISODuration(duration: string): string {
             {{ item.description ? item.description : '-' }}
           </td>
           <td class="text-black dark:text-white px-4 py-2">
-            <Button theme="secondary" class="px-5 duration-300 py-2 rounded-xl" type="button">
+            <Button @click="handleDetail" theme="secondary" class="px-5 duration-300 py-2 rounded-xl" type="button">
               Edit
             </Button>
           </td>
@@ -222,6 +284,17 @@ function parseISODuration(duration: string): string {
       </table>
 
     </div>
+    <Modal :show="show" size="md" @close="show = false">
+      <template #header>
+        <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200">Edit Time Session</h2>
+      </template>
+      <template #body>
+        <p class="text-gray-600 dark:text-gray-400">This is the modal body content.</p>
+      </template>
+      <template #footer>
+        <Button type="button" theme="primary" @click="show = false">Close</Button>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -248,7 +321,7 @@ function parseISODuration(duration: string): string {
 
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
-  transform: scale(0.9);
+  transform: scale(0.5);
 }
 
 .fade-enter-to, .fade-leave-from {

@@ -64,3 +64,47 @@ export const fetchApi = async <T>({url, config, body, method}: {
 export const validateForm = async <T>(values: T, schema: ZodSchema) => {
     await schema.parseAsync(values);
 };
+
+export const formatTime = (raw: number, viewType: string) => {
+    const date = new Date(raw);
+    if (isNaN(date.getTime())) return "Invalid date";
+
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const shortDays = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+    const months = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+
+    const dayNum = date.getDate();
+    const monthNum = date.getMonth() + 1;
+    const monthName = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    const dayName = days[date.getDay()];
+    const shortDayName = shortDays[date.getDay()];
+
+    const hour = date.getHours().toString().padStart(2, "0");
+    const minute = date.getMinutes().toString().padStart(2, "0");
+
+    let datePart = "";
+
+    switch (viewType) {
+        case "full-date":
+            datePart = `${dayNum} ${monthName} ${year}`;
+            break;
+        case "day-date":
+            datePart = `${dayName}, ${dayNum} ${monthName}`;
+            break;
+        case "short-date":
+            datePart = `${dayNum.toString().padStart(2, '0')}/${monthNum.toString().padStart(2, '0')}/${year}`;
+            break;
+        case "short-day":
+            datePart = `${shortDayName}, ${dayNum.toString().padStart(2, '0')}/${monthNum.toString().padStart(2, '0')}/${year}`;
+            break;
+        default:
+            datePart = date.toLocaleDateString();
+    }
+
+    return `${datePart}, ${hour}:${minute}`;
+}
