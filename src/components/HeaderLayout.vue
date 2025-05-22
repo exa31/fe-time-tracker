@@ -56,7 +56,7 @@ watch(
 
 <template>
   <header
-      class="flex z-10 fixed w-screen top-0 p-5 justify-between text-black bg-secondary dark:bg-primary dark:text-white ">
+      class="flex z-10 duration-300 transition-all fixed w-screen top-0 p-5 justify-between text-black bg-secondary dark:bg-primary dark:text-white ">
     <div class="logo">
       <h1 class="text-3xl text-black dark:text-white font-bold">ETime</h1>
     </div>
