@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {computed} from "vue";
-import Button from "./form/Button.vue";
 
 const props = defineProps<{
   show: boolean;
