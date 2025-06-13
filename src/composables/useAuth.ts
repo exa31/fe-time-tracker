@@ -176,9 +176,46 @@ const useAuth = () => {
         }
     }
 
+    const loginWithGoogle = async (response: { credential: string }) => {
+        if (loading.value) return
+        loading.value = true
+        try {
+            const res = await fetchApi<LoginResponse>({
+                url: '/api/v1/auth/google-login',
+                config,
+                body: {credential: response.credential},
+                method: 'post'
+            })
+            cookie?.set('token', res?.data.token)
+            await router.replace('/')
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                const message = error.response?.data?.message ?? 'Something went wrong';
+                toast.error(
+                    message,
+                    {
+                        position: "top-right",
+                        autoClose: 2000,
+                    }
+                )
+            } else {
+                toast.error(
+                    "Something went wrong",
+                    {
+                        position: "top-right",
+                        autoClose: 2000,
+                    }
+                )
+            }
+        } finally {
+            loading.value = false
+        }
+    }
+
     return {
         login,
         register,
+        loginWithGoogle,
         errorMessages
     }
 }

@@ -189,7 +189,7 @@ const useTimeSession = () => {
                 {
                     url: `/api/v1/time-sessions/${id}/update`,
                     config,
-                    method: 'put',
+                    method: 'patch',
                     body
                 }
             )

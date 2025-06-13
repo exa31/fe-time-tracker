@@ -14,7 +14,7 @@ export const fetchApi = async <T>({url, config, body, method}: {
             };
         },
     body?: object | FormData,
-    method: "get" | "post" | "put" | "delete"
+    method: "get" | "post" | "put" | "delete" | "patch"
 }) => {
     let retries = 3;
     const delay = (ms: number) =>
@@ -36,6 +36,10 @@ export const fetchApi = async <T>({url, config, body, method}: {
                 }
                 case "delete": {
                     const res = await apiClient.delete<T>(url, config);
+                    return res.data;
+                }
+                case "patch": {
+                    const res = await apiClient.patch<T>(url, body, config);
                     return res.data;
                 }
                 default:

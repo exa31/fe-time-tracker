@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {Lock, Mail} from 'lucide-vue-next'
 import Input from "../components/UI/form/Input.vue";
 import useAuth from "../composables/useAuth.ts";
@@ -7,11 +7,28 @@ import Button from "../components/UI/form/Button.vue";
 
 const email = ref('')
 const password = ref('')
-const {login, errorMessages} = useAuth()
+const {login, errorMessages, loginWithGoogle} = useAuth()
 
 const handleLogin = async (): Promise<void> => {
   await login(email.value, password.value)
 }
+
+onMounted(() => {
+  if (window.google) {
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_APP_GOOGLE_CLIENT_ID as string,
+      callback: loginWithGoogle,
+    });
+    window.google.accounts.id.renderButton(
+        document.getElementById('google-login-button')!,
+        {
+          theme: "filled_blue", // <- ini untuk dark mode
+          size: 'large',
+        }
+    );
+  }
+});
+
 </script>
 
 
@@ -39,6 +56,8 @@ const handleLogin = async (): Promise<void> => {
         <Button type="submit" theme="primary" class="px-5 duration-300 py-2 rounded-xl w-full ">
           Login
         </Button>
+        <p class="text-black dark:text-white text-center">Or Login With Google</p>
+        <div id="google-login-button" class="w-full"></div>
       </form>
     </div>
   </div>
