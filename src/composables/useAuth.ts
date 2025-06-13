@@ -52,12 +52,12 @@ const useAuth = () => {
         try {
             await validateForm<LoginRequest>(body, LoginSchema)
             const response = await fetchApi<LoginResponse>({
-                url: '/api/1.0/auth/login',
+                url: '/api/v1/auth/login',
                 config,
                 body,
                 method: 'post'
             })
-            cookie?.set('token', response?.data)
+            cookie?.set('token', response?.data.token)
             await router.replace('/')
         } catch (error) {
             if (error instanceof ZodError) {
@@ -121,7 +121,7 @@ const useAuth = () => {
         try {
             await validateForm<RegisterRequest>(body, RegisterSchema)
             const response = await fetchApi<RegisterResponse>({
-                url: '/api/1.0/auth/register',
+                url: '/api/v1/auth/register',
                 config,
                 body,
                 method: 'post'

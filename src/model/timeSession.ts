@@ -2,10 +2,10 @@ import type {Response} from "./index.ts";
 import {z} from "zod";
 
 export type TimeSession = {
-    idUser: number;
-    idTimeSession: number;
-    startTime: EpochTimeStamp;
-    endTime?: number;
+    id_user: number;
+    id: number;
+    start_time: EpochTimeStamp;
+    end_time?: number;
     description?: string;
     duration?: string;
 }

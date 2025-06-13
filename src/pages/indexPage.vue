@@ -22,7 +22,7 @@ const {
 onMounted(async () => {
   getAllTimeSession()
   await getActiveTimeSession();
-  if (timeSessionActive?.startTime) {
+  if (timeSessionActive?.start_time) {
     interval.value = setInterval(updateFormattedTime, 1000)
   }
 });
@@ -47,8 +47,8 @@ const second = ref("00");
 const day = ref("00");
 
 const updateFormattedTime = () => {
-  if (timeSessionActive?.startTime) {
-    const start = new Date(timeSessionActive.startTime);
+  if (timeSessionActive?.start_time) {
+    const start = new Date(timeSessionActive.start_time);
     const now = new Date();
     const elapsedTime = now.getTime() - start.getTime();
 
@@ -165,23 +165,37 @@ function formatDate(timestamp: number, viewType: { value: string, text: string }
   return `${datePart}, ${hour}:${minute}:${second}`;
 }
 
-function parseISODuration(duration: string): string {
-  // Contoh: "PT1H12M14.576297S"
-  const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)(?:\.\d+)?S)?/
-  const matches = duration.match(regex)
-
-  if (!matches) return '00:00:00'
-
-  const hours = matches[1] ? parseInt(matches[1]) : 0
-  const minutes = matches[2] ? parseInt(matches[2]) : 0
-  const seconds = matches[3] ? parseInt(matches[3]) : 0
-
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-}
+// function parseISODuration(duration: string): string {
+//   // Jika hanya angka (misal: "29177319"), anggap sebagai detik
+//   if (/^\d+$/.test(duration)) {
+//     const totalSeconds = parseInt(duration, 10)
+//
+//     // Batasi agar jam tidak jadi 8104 (misalnya tampilkan sisa jam setelah hari)
+//     const days = Math.floor(totalSeconds / 86400)
+//     const remainingAfterDays = totalSeconds % 86400
+//     const hours = Math.floor(remainingAfterDays / 3600)
+//     const minutes = Math.floor((remainingAfterDays % 3600) / 60)
+//     const seconds = remainingAfterDays % 60
+//
+//     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+//   }
+//
+//   // Jika format ISO 8601 (misal: "PT1H12M14.576297S")
+//   const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)(?:\.\d+)?S)?/
+//   const matches = duration.match(regex)
+//
+//   if (!matches) return '00:00:00'
+//
+//   const hours = matches[1] ? parseInt(matches[1]) : 0
+//   const minutes = matches[2] ? parseInt(matches[2]) : 0
+//   const seconds = matches[3] ? parseInt(matches[3]) : 0
+//
+//   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+// }
 
 function handleDetail(idTimeSession: number) {
   show.value = true
-  const timeSession = data.find((item) => item.idTimeSession === idTimeSession)
+  const timeSession = data.find((item) => item.id === idTimeSession)
   if (!timeSession) return
   formData.value = {
     description: timeSession.description || '',
@@ -192,7 +206,7 @@ function handleDetail(idTimeSession: number) {
 async function handleUpdate() {
   try {
     if (!formData.value?.idTimeSession || !formData.value?.description) return
-    const timeSession = data.find((item) => item.idTimeSession === formData.value?.idTimeSession)
+    const timeSession = data.find((item) => item.id === formData.value?.idTimeSession)
     if (!timeSession) return
     const body = {
       description: formData.value.description,
@@ -208,48 +222,50 @@ async function handleUpdate() {
 </script>
 
 <template>
-  <div class="text-center space-y-4">
+  <div class="text-center w-full space-y-4">
     <div class="min-h-screen  flex flex-col items-center justify-center">
-      <div class="flex  items-center justify-center gap-10">
+      <div class="flex items-center justify-center gap-4 md:gap-10">
         <div class="time-box">
           <div v-if="loading">
             <div class="w-full h-full time-display bg-gray-300  dark:bg-gray-700 animate-pulse rounded-2xl"></div>
           </div>
           <transition v-else name="fade">
-            <div :key="day" class="text-9xl time-display text-black dark:text-white font-bold">
+            <div :key="day" class="lg:text-9xl text-4xl md:text-7xl time-display text-black dark:text-white font-bold">
               {{ day }}
             </div>
           </transition>
         </div>
-        <p class="text-9xl text-black dark:text-white font-bold">:</p>
+        <p class="lg:text-9xl text-4xl md:text-7xl text-black dark:text-white font-bold">:</p>
         <div class="time-box">
           <div v-if="loading">
             <div class="w-full h-full time-display bg-gray-300  dark:bg-gray-700 animate-pulse rounded-2xl"></div>
           </div>
           <transition v-else name="fade">
-            <div :key="hour" class="text-9xl time-display text-black dark:text-white font-bold">
+            <div :key="hour" class="lg:text-9xl text-4xl md:text-7xl time-display text-black dark:text-white font-bold">
               {{ hour }}
             </div>
           </transition>
         </div>
-        <p class="text-9xl text-black dark:text-white font-bold">:</p>
+        <p class="lg:text-9xl text-4xl md:text-7xl text-black dark:text-white font-bold">:</p>
         <div class="time-box">
           <div v-if="loading">
             <div class="w-full h-full time-display bg-gray-300  dark:bg-gray-700 animate-pulse rounded-2xl"></div>
           </div>
           <transition v-else name="fade">
-            <div :key="minute" class="text-9xl time-display text-black dark:text-white font-bold">
+            <div :key="minute"
+                 class="lg:text-9xl text-4xl md:text-7xl time-display text-black dark:text-white font-bold">
               {{ minute }}
             </div>
           </transition>
         </div>
-        <p class="text-9xl text-black dark:text-white font-bold">:</p>
+        <p class="lg:text-9xl text-4xl md:text-7xl text-black dark:text-white font-bold">:</p>
         <div class="time-box">
           <div v-if="loading">
             <div class="w-full h-full time-display bg-gray-300  dark:bg-gray-700 animate-pulse rounded-2xl"></div>
           </div>
           <transition v-else name="fade">
-            <div :key="second" class="text-9xl time-display text-black dark:text-white font-bold">
+            <div :key="second"
+                 class="lg:text-9xl text-4xl md:text-7xl time-display text-black dark:text-white font-bold">
               {{ second }}
             </div>
           </transition>
@@ -257,7 +273,7 @@ async function handleUpdate() {
       </div>
       <div class="my-20">
         <template v-if="!loading">
-          <Button v-if="timeSessionActive.startTime" type="button" theme="primary"
+          <Button v-if="timeSessionActive.start_time" type="button" theme="primary"
                   class="px-14 duration-300 py-2 rounded-xl"
                   @click="handleStop">
             Stop
@@ -272,52 +288,55 @@ async function handleUpdate() {
       </div>
     </div>
 
-    <div class="my-20">
+    <div class="my-20 w-full mx-auto px-4">
       <h3 class="text-2xl text-black dark:text-white font-bold">History</h3>
       <p class="text-gray-500 dark:text-gray-400">History of your time session</p>
       <div class="text-start my-5">
-        <Select theme="base" class="px-5  py-3 rounded-2xl" id="selectView" v-model="selectedViewType"
+        <Select theme="base" class="px-5 py-3 rounded-2xl" id="selectView" v-model="selectedViewType"
                 label="Select view"
                 :options="optionsView"
                 placeholder="Select View History"></Select>
       </div>
-      <table class="min-w-full mt-10 table-auto border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-        <thead class="bg-gray-100 text-center  dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-        <tr>
-          <th class="px-4 py-2 text-black dark:text-white ">Start Time</th>
-          <th class="px-4 py-2 text-black dark:text-white ">End Time</th>
-          <th class="px-4 py-2 text-black dark:text-white ">Duration</th>
-          <th class="px-4 py-2 text-black dark:text-white ">Description</th>
-          <th class="px-4 py-2 text-black dark:text-white ">Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr
-            v-for="(item, index) in data"
-            :key="index"
-            class="even:bg-gray-50 dark:even:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        >
-          <td class="text-black dark:text-white px-4 py-2">
-            {{ formatDate(item.startTime, selectedViewType) }}
-          </td>
-          <td class="text-black dark:text-white px-4 py-2">
-            {{ item.endTime ? formatDate(item.endTime, selectedViewType) : '-' }}
-          </td>
-          <td class="text-black dark:text-white px-4 py-2">
-            {{ item.duration ? parseISODuration(item.duration) : '-' }}
-          </td>
-          <td class="text-black dark:text-white px-4 py-2">
-            {{ item.description ? item.description : '-' }}
-          </td>
-          <td class="text-black dark:text-white px-4 py-2">
-            <Button @click="handleDetail(item.idTimeSession)" theme="secondary"
-                    class="px-5 duration-300 py-2 rounded-xl" type="button">
-              Edit
-            </Button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+      <div class="overflow-auto mt-10 rounded-lg border border-gray-300 dark:border-gray-700">
+        <table class="min-w-max  w-full table-auto">
+          <thead class="bg-gray-100 text-center dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+          <tr>
+            <th class="px-4 py-2 text-black dark:text-white">Start Time</th>
+            <th class="px-4 py-2 text-black dark:text-white">End Time</th>
+            <th class="px-4 py-2 text-black dark:text-white">Duration</th>
+            <th class="px-4 py-2 text-black dark:text-white">Description</th>
+            <th class="px-4 py-2 text-black dark:text-white">Action</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr
+              v-for="(item, index) in data"
+              :key="index"
+              class="even:bg-gray-50 dark:even:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <td class="text-black dark:text-white px-4 py-2">
+              {{ formatDate(item.start_time, selectedViewType) }}
+            </td>
+            <td class="text-black dark:text-white px-4 py-2">
+              {{ item.end_time ? formatDate(item.end_time, selectedViewType) : '-' }}
+            </td>
+            <td class="text-black dark:text-white px-4 py-2">
+              {{ item.duration ? item.duration : '-' }}
+            </td>
+            <td class="text-black dark:text-white px-4 py-2">
+              {{ item.description ? item.description : '-' }}
+            </td>
+            <td class="text-black dark:text-white px-4 py-2">
+              <Button @click="handleDetail(item.id)" theme="secondary" class="px-5 duration-300 py-2 rounded-xl"
+                      type="button">
+                Edit
+              </Button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
 
     </div>
     <Modal :show="show" size="md" @close="show = false">
@@ -357,6 +376,20 @@ async function handleUpdate() {
   width: 10rem; /* tetap agar tidak goyang */
   height: 8rem;
   display: inline-block;
+}
+
+@media screen and (max-width: 1024px) {
+  .time-box {
+    width: 6rem; /* Lebih kecil untuk layar kecil */
+    height: 4.5rem;
+  }
+}
+
+@media screen and  (max-width: 768px) {
+  .time-box {
+    width: 2.5rem; /* Lebih kecil untuk layar sangat kecil */
+    height: 2rem;
+  }
 }
 
 .time-display {

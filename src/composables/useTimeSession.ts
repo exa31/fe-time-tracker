@@ -23,10 +23,10 @@ const useTimeSession = () => {
     const data = reactive<TimeSession[]>([])
     const timeSessionActive = reactive<TimeSession>(
         {
-            idUser: 0,
-            idTimeSession: 0,
-            startTime: 0,
-            endTime: undefined,
+            id_user: 0,
+            id: 0,
+            start_time: 0,
+            end_time: undefined,
             description: undefined,
             duration: undefined
         }
@@ -49,12 +49,12 @@ const useTimeSession = () => {
         try {
             await fetchApi(
                 {
-                    url: '/api/1.0/time-sessions/start',
+                    url: '/api/v1/time-sessions/start',
                     config,
                     method: 'post'
                 }
             )
-            timeSessionActive.startTime = Date.now()
+            timeSessionActive.start_time = Date.now()
             toast.success("Time session started successfully")
 
         } catch (error) {
@@ -83,7 +83,7 @@ const useTimeSession = () => {
         loading.value = true
         try {
             const data = await fetchApi<GetActiveTimeSessionResponse>({
-                url: '/api/1.0/time-sessions/active',
+                url: '/api/v1/time-sessions/active',
                 config,
                 method: 'get'
             })
@@ -117,7 +117,7 @@ const useTimeSession = () => {
         try {
             await fetchApi(
                 {
-                    url: '/api/1.0/time-sessions/stop',
+                    url: '/api/v1/time-sessions/stop',
                     config,
                     method: 'put'
                 }
@@ -147,13 +147,13 @@ const useTimeSession = () => {
     const getAllTimeSession = async () => {
         try {
             const res = await fetchApi<GetTimeSessionsResponse>({
-                url: '/api/1.0/time-sessions',
+                url: '/api/v1/time-sessions',
                 config,
                 method: 'get'
             })
             if (res?.data) {
                 const dataSorted = res.data.sort((a, b) => {
-                    return new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+                    return new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
                 })
                 Object.assign(data, dataSorted)
                 return
@@ -187,7 +187,7 @@ const useTimeSession = () => {
             await validateForm(body, UpdateTimeSession)
             await fetchApi(
                 {
-                    url: `/api/1.0/time-sessions/${id}/update`,
+                    url: `/api/v1/time-sessions/${id}/update`,
                     config,
                     method: 'put',
                     body

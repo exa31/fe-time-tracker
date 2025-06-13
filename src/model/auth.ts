@@ -28,4 +28,4 @@ export type RegisterResponse = Response<string>
 
 export type LoginRequest = z.infer<typeof LoginSchema>
 
-export type LoginResponse = Response<string>
+export type LoginResponse = Response<{ token: string }>

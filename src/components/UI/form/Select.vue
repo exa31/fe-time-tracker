@@ -45,7 +45,7 @@ const onChange = (event: Event) => {
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div class="w-full flex flex-col">
     <label :for="id" class="text-base mb-6 font-medium text-gray-700 dark:text-gray-300">{{ label }}</label>
     <select
         :id="id"
